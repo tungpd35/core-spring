@@ -21,8 +21,7 @@ public class ProducerController {
         return "✅ Message sent with orderId=" + orderId;
     }
 
-//    @GetMapping("/kafka-stream")
-//    public String ksql() {
+//    @GetMapping("/kafka-stream")//    public String ksql() {
 //        Properties props = new Properties();
 //        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.1.115:9093");
 //        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "my-streams-app"); // 🔥 bắt buộc

@@ -1,0 +1,25 @@
+architecture: replication
+
+auth:
+  enabled: true
+  password: "Redis@2025"
+
+sentinel:
+  enabled: true
+
+master:
+  containerPorts:
+    redis: 6379
+  persistence:
+    enabled: true
+    existingClaim: "redis-pvc"
+    size: 2Gi
+
+replica:
+  replicaCount: 2
+  containerPorts:
+    redis: 6379
+  persistence:
+    enabled: true
+    existingClaim: "redis-pvc"
+    size: 2Gi

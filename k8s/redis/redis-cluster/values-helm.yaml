@@ -1,0 +1,23 @@
+architecture: cluster
+
+auth:
+  enabled: true
+  password: "Redis@2025"
+
+cluster:
+  enabled: true
+  init: true
+  nodes: 6 # tổng số node trong cluster
+  replicas: 1  # số replica mỗi master
+
+persistence:
+  enabled: true
+  storageClass: "nfs-storage"
+  size: 2Gi
+
+service:
+  type: NodePort
+  ports:
+    redis: 6379
+  nodePorts:
+    redis: 6379

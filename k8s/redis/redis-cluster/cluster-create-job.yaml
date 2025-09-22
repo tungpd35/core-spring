@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redis-cluster-create
+  namespace: redis
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: redis-cluster-create
+          image: docker.io/bitnami/redis-cluster:8.2.1-debian-12-r0
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-cluster
+                  key: redis-password
+          command:
+            - /bin/bash
+            - -c
+            - |
+              echo "Creating Redis cluster..."
+              redis-cli --cluster create \
+                redis-cluster-0.redis-cluster-headless.redis.svc.cluster.local:6379 \
+                redis-cluster-1.redis-cluster-headless.redis.svc.cluster.local:6379 \
+                redis-cluster-2.redis-cluster-headless.redis.svc.cluster.local:6379 \
+                redis-cluster-3.redis-cluster-headless.redis.svc.cluster.local:6379 \
+                redis-cluster-4.redis-cluster-headless.redis.svc.cluster.local:6379 \
+                redis-cluster-5.redis-cluster-headless.redis.svc.cluster.local:6379 \
+                --cluster-replicas 1 -a $REDIS_PASSWORD --cluster-yes
