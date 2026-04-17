@@ -23,4 +23,14 @@ stages:
         docker build . -t core-service:v1
       displayName: "Build Project"
 - stage: 
-  displayName: "Waiting Approve"
+  jobs:
+    - deployment: 
+      environment: ${{ parameters.environment }}
+      displayName: "Wait for approving"
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - script: |
+                 echo Wait for Leader approving    
+              displayName: Wait for Leader approving pipeline
