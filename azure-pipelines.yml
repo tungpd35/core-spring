@@ -12,8 +12,8 @@ pool:
 
 steps:
   - script: |
-          echo "Test Success"
+          echo "Move to core-service"
           cd core-service
           docker build . -t core-service:v1
-    displayName: "Test pipeline"
+    displayName: "Build Project"
     
