@@ -25,7 +25,7 @@ stages:
 - stage: 
   jobs:
     - deployment: 
-      environment: ${{ parameters.environment }}
+      environment: wait
       displayName: "Wait for approving"
       strategy:
         runOnce:
