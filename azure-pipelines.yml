@@ -11,6 +11,9 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-  - script: echo "Test Success"
+  - script: |
+          echo "Test Success"
+          cd core-service
+          docker build . -t core-service:v1
     displayName: "Test pipeline"
     
