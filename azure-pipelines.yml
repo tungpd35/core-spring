@@ -22,3 +22,5 @@ stages:
         pwd
         docker build . -t core-service:v1
       displayName: "Build Project"
+- stage: 
+  displayName: "Waiting Approve"
