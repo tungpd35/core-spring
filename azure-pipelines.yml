@@ -10,11 +10,15 @@ pool:
   name: Default
   vmImage: ubuntu-latest
 
-steps:
-  - script: |
-          echo "Move to core-service"
-          cd core-service
-          pwd
-          docker build . -t core-service:v1
-    displayName: "Build Project"
-    
+stages:
+- stage: "Build Project"
+  displayName: "Build Project"
+  jobs:
+  - job: Build
+    steps:
+    - script: |
+        echo "Move to core-service"
+        cd core-service
+        pwd
+        docker build . -t core-service:v1
+      displayName: "Build Project"
