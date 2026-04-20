@@ -22,7 +22,7 @@ stages:
         pwd
         docker build . -t core-service:v1
       displayName: "Build Project"
-- stage: f
+- stage: 
   displayName: "Scan Project"
   jobs:
     - deployment: 
@@ -42,9 +42,23 @@ stages:
                 scanmode: 'directory'
               displayName: "Scan for password or hardcode"
               continueOnError: true
-            - task: PublishSecurityAnalysisLogs@3
-              inputs:
-                ArtifactName: 'CodeAnalysisLogs'
+- stage: 
+  displayName: "Scan Image"
+  jobs:
+    - deployment: 
+      environment: dev
+      displayName: "Scan image with trivy"
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - task: trivy@1
+                displayName: "Scan Docker Image"
+                inputs:
+                  image: 'maven:3.9.14-eclipse-temurin-17'
+                  severity: 'HIGH,CRITICAL'
+                  exitCode: '1'
+
 - stage: 
   jobs:
     - deployment: 
