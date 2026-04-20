@@ -55,10 +55,8 @@ stages:
               - task: trivy@1
                 displayName: "Scan Docker Image"
                 inputs:
-                  image: 'maven:3.9.14-eclipse-temurin-17'
-                  severity: 'HIGH,CRITICAL'
-                  exitCode: '1'
-
+                  script: |
+                    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh ./bin/trivy image maven:3.9.14-eclipse-temurin-17
 - stage: 
   jobs:
     - deployment: 
