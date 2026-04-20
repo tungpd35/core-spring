@@ -23,6 +23,25 @@ stages:
         docker build . -t core-service:v1
       displayName: "Build Project"
 - stage: 
+  displayName: "Scan Project"
+  jobs:
+    - deployment: 
+      displayName: "Scan code with gitleaks"
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - task: Gitleaks@2
+              name: scan
+              inputs:
+                scanlocation: '$(Build.SourcesDirectory)/core-service'
+                configtype: 'predefined'
+                predefinedconfigfile: 'GitleaksUdmCombo.toml'
+                reportformat: 'sarif'
+                scanmode: 'nogit'
+              displayName: "Scan for password or hardcode"
+              continueOnError: true
+- stage: 
   jobs:
     - deployment: 
       environment: wait
