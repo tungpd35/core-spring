@@ -52,11 +52,10 @@ stages:
         runOnce:
           deploy:
             steps:
-              - task: trivy@1
+              - script: |
+                  curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh ./bin/trivy image maven:3.9.14-eclipse-temurin-17
                 displayName: "Scan Docker Image"
-                inputs:
-                  script: |
-                    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh ./bin/trivy image maven:3.9.14-eclipse-temurin-17
+
 - stage: 
   jobs:
     - deployment: 
