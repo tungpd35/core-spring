@@ -39,6 +39,7 @@ stages:
                 configtype: 'predefined'
                 predefinedconfigfile: 'GitleaksUdmCombo.toml'
                 reportformat: 'sarif'
+                scanmode: 'directory'
               displayName: "Scan for password or hardcode"
               continueOnError: true
 - stage: 
