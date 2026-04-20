@@ -26,6 +26,7 @@ stages:
   displayName: "Scan Project"
   jobs:
     - deployment: 
+      environment: dev
       displayName: "Scan code with gitleaks"
       strategy:
         runOnce:
