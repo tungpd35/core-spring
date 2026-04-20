@@ -32,7 +32,7 @@ stages:
         runOnce:
           deploy:
             steps:
-            - task: Gitleaks@2
+            - task: Gitleaks@3
               name: scan
               inputs:
                 scanlocation: '$(Build.SourcesDirectory)/core-service'
