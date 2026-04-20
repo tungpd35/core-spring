@@ -22,7 +22,7 @@ stages:
         pwd
         docker build . -t core-service:v1
       displayName: "Build Project"
-- stage: 
+- stage: f
   displayName: "Scan Project"
   jobs:
     - deployment: 
@@ -42,6 +42,9 @@ stages:
                 scanmode: 'directory'
               displayName: "Scan for password or hardcode"
               continueOnError: true
+            - task: PublishSecurityAnalysisLogs@3
+              inputs:
+                ArtifactName: 'CodeAnalysisLogs'
 - stage: 
   jobs:
     - deployment: 
