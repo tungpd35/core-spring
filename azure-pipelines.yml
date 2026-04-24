@@ -24,6 +24,11 @@ stages:
   - stage: DeployClusterK8S
     displayName: "Deploy Cluster K8S Stage"
     dependsOn: DeployUat
+    condition: |
+            and(
+              succeeded(),
+              startsWith(variables['Build.SourceBranch'], 'refs/heads/master')
+            )
     jobs:
       - deployment: DockerBuild
         environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
@@ -44,6 +49,11 @@ stages:
   - stage: DeployProd
     displayName: "Deploy Prod Stage"
     dependsOn: DeployUat
+    condition: |
+            and(
+              succeeded(),
+              startsWith(variables['Build.SourceBranch'], 'refs/heads/master')
+            )
     jobs:
       - deployment: DeployProdJob
         environment: prod          # ← Cùng environment, cùng approval gate.
@@ -58,6 +68,11 @@ stages:
   - stage: DeployClusterDR
     displayName: "Deploy DR Stage"
     dependsOn: DeployProd
+    condition: |
+            and(
+              succeeded(),
+              startsWith(variables['Build.SourceBranch'], 'refs/heads/master')
+            )
     jobs:
       - deployment: DeployDR
         environment: dr
@@ -72,6 +87,11 @@ stages:
   - stage: SendNotify
     displayName: "Create PR Task"
     dependsOn: DeployProd
+    condition: |
+            and(
+              succeeded(),
+              startsWith(variables['Build.SourceBranch'], 'refs/heads/master')
+            )
     jobs:
       - job: Notify
         steps:
