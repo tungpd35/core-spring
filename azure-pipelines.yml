@@ -93,6 +93,10 @@ stages:
               startsWith(variables['Build.SourceBranch'], 'refs/heads/master')
             )
     jobs:
-      - job: Notify
-        steps:
-          - script: echo "Sending notification..."
+      - deployment: DeployDR
+        environment: notify
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Sending notification..."
