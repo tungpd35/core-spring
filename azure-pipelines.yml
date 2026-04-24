@@ -1,71 +1,73 @@
-# Maven
-# Build your Java project and run tests with Apache Maven.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/java
-
 trigger:
 - master
 
 pool:
   name: Default
-  vmImage: ubuntu-latest
 
 stages:
-  # Stage 1: Simulate DeployUat
   - stage: DeployUat
     displayName: "Deploy UAT Stage"
     jobs:
       - job: DeployUatJob
+        pool:
+          name: Default
         steps:
           - script: echo "Deploying to UAT..."
 
-  # Stage 2: DeployClusterK8S - dependsOn DeployUat (có approval gate)
-  # BUG: Dù DeployProd xong, stage này vẫn Waiting vì approval gate trên environment
+  # Stage này dùng agentless job để giả lập "Waiting" 
+  # → chiếm slot pipeline, block các stage sau
   - stage: DeployClusterK8S
     displayName: "Deploy Cluster K8S Stage"
     dependsOn: DeployUat
     jobs:
-      - deployment: DeployK8S
-        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "Deploying to K8S cluster..."
+      - job: WaitApproval
+        pool: server          # ← agentless, không dùng agent
+        timeoutInMinutes: 60
+        steps:
+          - task: ManualValidation@0
+            timeoutInMinutes: 60
+            inputs:
+              instructions: "Approve để tiếp tục Deploy K8S"
+              onTimeout: reject
 
-  # Stage 3: DeployProd - dependsOn DeployUat (chạy song song với DeployClusterK8S)
+      - job: DeployK8SJob
+        dependsOn: WaitApproval
+        pool:
+          name: Default
+        steps:
+          - script: echo "Deploying to K8S cluster..."
+
+  # Chạy song song với DeployClusterK8S, dependsOn DeployUat
   - stage: DeployProd
     displayName: "Deploy Prod Stage"
     dependsOn: DeployUat
     jobs:
-      - deployment: DeployProdJob
-        environment: prod          # ← Cùng environment, cùng approval gate.
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "Deploying to Prod..."
+      - job: DeployProdJob
+        pool:
+          name: Default
+        steps:
+          - script: echo "Deploying to Prod..."
+          - script: sleep 10   # giả lập thời gian deploy
 
-  # Stage 4: DeployClusterDR - dependsOn DeployProd
-  # BUG: Not started dù DeployProd đã xong vì DeployClusterK8S vẫn đang Waiting
+  # BUG reproduced ở đây:
+  # dependsOn DeployProd đã xong, nhưng vẫn bị Queued
+  # vì DeployClusterK8S đang chiếm parallel job slot
   - stage: DeployClusterDR
     displayName: "Deploy DR Stage"
     dependsOn: DeployProd
     jobs:
-      - deployment: DeployDR
-        environment: dr
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "Deploying to DR..."
+      - job: DeployDRJob
+        pool:
+          name: Default
+        steps:
+          - script: echo "Deploying to DR..."
 
-  # Stage 5: SendNotify - dependsOn DeployProd
-  # BUG: Tương tự, Not started
   - stage: SendNotify
     displayName: "Create PR Task"
     dependsOn: DeployProd
     jobs:
-      - job: Notify
+      - job: NotifyJob
+        pool:
+          name: Default
         steps:
           - script: echo "Sending notification..."
