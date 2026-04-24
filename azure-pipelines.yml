@@ -52,7 +52,7 @@ stages:
       condition: |
               and(
                 succeeded(),
-                startsWith(variables['Build.SourceBranch'], 'refs/heads/dev')
+                startsWith(variables['Build.SourceBranch'], 'refs/heads/master')
               )
       strategy:
         runOnce:
