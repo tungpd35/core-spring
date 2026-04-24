@@ -47,7 +47,10 @@ stages:
           name: Default
         steps:
           - script: echo "Deploying to Prod..."
-          - script: sleep 10   # giả lập thời gian deploy
+          - task: PowerShell@2
+            inputs:
+              targetType: inline
+              script: Start-Sleep -Seconds 10
 
   # BUG reproduced ở đây:
   # dependsOn DeployProd đã xong, nhưng vẫn bị Queued
