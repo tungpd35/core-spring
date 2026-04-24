@@ -39,7 +39,7 @@ stages:
     dependsOn: DeployUat
     jobs:
       - deployment: DeployProdJob
-        environment: prod          # ← Cùng environment, cùng approval gate
+        environment: prod          # ← Cùng environment, cùng approval gate.
         strategy:
           runOnce:
             deploy:
