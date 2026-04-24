@@ -12,39 +12,42 @@ pool:
 
 stages:
 - stage: Init
-  displayName: "Init"
   jobs:
   - job: init
     steps:
-    - script: echo "Init done"
+    - script: echo "Init"
 
-# 2. Tách thành 2 nhánh song song
-- stage: BuildA
-  displayName: "Build A"
+# 2. Stage trung gian (rất quan trọng)
+- stage: AfterInit
   dependsOn: Init
+  jobs:
+  - job: mid
+    steps:
+    - script: echo "After Init"
+
+# 3. Tách nhánh từ cùng 1 node trung gian
+- stage: BuildA
+  dependsOn: AfterInit
   jobs:
   - job: buildA
     steps:
     - script: echo "Build A done"
 
 - stage: BuildB
-  displayName: "Build B (WAITING)"
-  dependsOn: Init
+  dependsOn: AfterInit
   jobs:
   - deployment: waitJob
-    displayName: "Waiting Approval"
-    environment: wait   # ⚠️ environment có approval → sẽ WAITING
+    environment: wait   # có approval → WAITING
     strategy:
       runOnce:
         deploy:
           steps:
-          - script: echo "This will wait for approval"
+          - script: echo "Waiting approval..."
 
-# 3. Stage bạn kỳ vọng chạy được (nhưng sẽ bị pending)
+# 4. Stage cuối (giống SendNotify)
 - stage: FinalStage
-  displayName: "Final Stage (Expected to run but will PENDING)"
   dependsOn: BuildA
-  condition: succeeded()   # ⚠️ gây vấn đề
+  condition: succeeded()
   jobs:
   - job: final
     steps:
