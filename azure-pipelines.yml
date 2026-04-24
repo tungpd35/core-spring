@@ -11,8 +11,17 @@ pool:
   vmImage: ubuntu-latest
 
 stages:
+- stage: "Checkout"
+  displayName: "Checkout source code"
+  jobs:
+  - job: checkout
+    steps:
+    - script: |
+        echo "Checkout source code"
+      displayName: "Checkout source code"
 - stage: "BuildProject"
   displayName: "Build Project"
+  dependsOn: Checkout
   jobs:
   - job: Build
     steps:
@@ -24,6 +33,7 @@ stages:
       displayName: "Build Project"
 - stage: 
   displayName: "Scan Project"
+  dependsOn: Checkout
   jobs:
     - deployment: 
       environment: wait
