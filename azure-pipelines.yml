@@ -26,7 +26,7 @@ stages:
   displayName: "Scan Project"
   jobs:
     - deployment: 
-      environment: dev
+      environment: wait
       displayName: "Scan code with gitleaks"
       strategy:
         runOnce:
@@ -60,16 +60,3 @@ stages:
                         Expand-Archive trivy.zip -DestinationPath .
                         .\trivy.exe image maven:3.9.14-eclipse-temurin-17 --severity HIGH,CRITICAL --exit-code 1
                 displayName: "Scan Docker Image"
-
-- stage: 
-  jobs:
-    - deployment: 
-      environment: wait
-      displayName: "Wait for approving"
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-            - script: |
-                 echo Wait for Leader approving    
-              displayName: Wait for Leader approving pipeline
