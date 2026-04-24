@@ -37,7 +37,7 @@ stages:
   dependsOn: AfterInit
   jobs:
   - deployment: waitJob
-    environment: wait   # có approval → WAITING
+    environment: wait   
     strategy:
       runOnce:
         deploy:
