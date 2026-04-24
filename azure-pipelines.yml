@@ -44,6 +44,41 @@ stages:
             deploy:
               steps:
                 - script: echo "Deploying2 to K8S cluster..."
+      - deployment: DeployK8S3
+        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Deploying3 to K8S cluster..."
+      - deployment: DeployK8S4
+        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Deploying4 to K8S cluster..."
+      - deployment: DeployK8S5
+        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Deploying5 to K8S cluster..."
+      - deployment: DeployK8S6
+        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Deploying6 to K8S cluster..."
+      - deployment: DeployK8S7
+        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Deploying7 to K8S cluster..."
 
   # Stage 3: DeployProd - dependsOn DeployUat (chạy song song với DeployClusterK8S)
   - stage: DeployProd
@@ -62,6 +97,13 @@ stages:
             deploy:
               steps:
                 - script: echo "Deploying to Prod..."
+      - deployment: DeployProdJob2
+        environment: prod          # ← Cùng environment, cùng approval gate.
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Deploying2 to Prod..."
 
   # Stage 4: DeployClusterDR - dependsOn DeployProd
   # BUG: Not started dù DeployProd đã xong vì DeployClusterK8S vẫn đang Waiting
