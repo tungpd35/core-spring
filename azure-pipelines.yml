@@ -11,44 +11,61 @@ pool:
   vmImage: ubuntu-latest
 
 stages:
-- stage: Init
-  jobs:
-  - job: init
-    steps:
-    - script: echo "Init"
+  # Stage 1: Simulate DeployUat
+  - stage: DeployUat
+    displayName: "Deploy UAT Stage"
+    jobs:
+      - job: DeployUatJob
+        steps:
+          - script: echo "Deploying to UAT..."
 
-# 2. Stage trung gian (rất quan trọng)
-- stage: AfterInit
-  dependsOn: Init
-  jobs:
-  - job: mid
-    steps:
-    - script: echo "After Init"
+  # Stage 2: DeployClusterK8S - dependsOn DeployUat (có approval gate)
+  # BUG: Dù DeployProd xong, stage này vẫn Waiting vì approval gate trên environment
+  - stage: DeployClusterK8S
+    displayName: "Deploy Cluster K8S Stage"
+    dependsOn: DeployUat
+    jobs:
+      - deployment: DeployK8S
+        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Deploying to K8S cluster..."
 
-# 3. Tách nhánh từ cùng 1 node trung gian
-- stage: BuildA
-  dependsOn: AfterInit
-  jobs:
-  - job: buildA
-    steps:
-    - script: echo "Build A done"
+  # Stage 3: DeployProd - dependsOn DeployUat (chạy song song với DeployClusterK8S)
+  - stage: DeployProd
+    displayName: "Deploy Prod Stage"
+    dependsOn: DeployUat
+    jobs:
+      - deployment: DeployProdJob
+        environment: prod          # ← Cùng environment, cùng approval gate
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Deploying to Prod..."
 
-- stage: BuildB
-  dependsOn: AfterInit
-  jobs:
-  - deployment: waitJob
-    environment: wait   
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - script: echo "Waiting approval..."
+  # Stage 4: DeployClusterDR - dependsOn DeployProd
+  # BUG: Not started dù DeployProd đã xong vì DeployClusterK8S vẫn đang Waiting
+  - stage: DeployClusterDR
+    displayName: "Deploy DR Stage"
+    dependsOn: DeployProd
+    jobs:
+      - deployment: DeployDR
+        environment: dr
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Deploying to DR..."
 
-# 4. Stage cuối (giống SendNotify)
-- stage: FinalStage
-  dependsOn: BuildA
-  condition: succeeded()
-  jobs:
-  - job: final
-    steps:
-    - script: echo "Final running"
+  # Stage 5: SendNotify - dependsOn DeployProd
+  # BUG: Tương tự, Not started
+  - stage: SendNotify
+    displayName: "Create PR Task"
+    dependsOn: DeployProd
+    jobs:
+      - job: Notify
+        steps:
+          - script: echo "Sending notification..."
