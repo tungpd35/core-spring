@@ -52,9 +52,13 @@ stages:
     displayName: "Deploy DR Stage"
     dependsOn: DeployProd
     jobs:
-      - job: Deploying
-        steps: 
-          - script: echo "Deploying to DR..."
+      - deployment: DeployDR
+        environment: dr
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Deploying to DR..."
 
   # Stage 5: SendNotify - dependsOn DeployProd
   # BUG: Tương tự, Not started
