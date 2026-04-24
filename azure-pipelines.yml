@@ -49,7 +49,11 @@ stages:
     - deployment: 
       environment: dev
       displayName: "Scan image with trivy"
-      condition: startsWith(variables['Build.SourceBranch'], 'refs/heads/dev')
+      condition: |
+              and(
+                succeeded(),
+                startsWith(variables['Build.SourceBranch'], 'refs/heads/dev')
+              )
       strategy:
         runOnce:
           deploy:
