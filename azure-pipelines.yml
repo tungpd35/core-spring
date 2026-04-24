@@ -11,63 +11,41 @@ pool:
   vmImage: ubuntu-latest
 
 stages:
-- stage: "Checkout"
-  displayName: "Checkout source code"
+- stage: Init
+  displayName: "Init"
   jobs:
-  - job: checkout
+  - job: init
     steps:
-    - script: |
-        echo "Checkout source code"
-      displayName: "Checkout source code"
-- stage: "BuildProject"
-  displayName: "Build Project"
-  dependsOn: Checkout
+    - script: echo "Init done"
+
+# 2. Tách thành 2 nhánh song song
+- stage: BuildA
+  displayName: "Build A"
+  dependsOn: Init
   jobs:
-  - job: Build
+  - job: buildA
     steps:
-    - script: |
-        echo "Move to core-service"
-        cd core-service
-        pwd
-        docker build . -t core-service:v1
-      displayName: "Build Project"
-- stage: 
-  displayName: "Scan Project"
-  dependsOn: Checkout
+    - script: echo "Build A done"
+
+- stage: BuildB
+  displayName: "Build B (WAITING)"
+  dependsOn: Init
   jobs:
-    - deployment: 
-      environment: wait
-      displayName: "Scan code with gitleaks"
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-            - task: Gitleaks@3
-              name: scan
-              inputs:
-                scanlocation: '$(Build.SourcesDirectory)/core-service'
-                configtype: 'predefined'
-                predefinedconfigfile: 'GitleaksUdmCombo.toml'
-                reportformat: 'sarif'
-                scanmode: 'directory'
-              displayName: "Scan for password or hardcode"
-              continueOnError: true
-- stage: 
-  displayName: "Scan Image"
-  dependsOn: BuildProject
+  - deployment: waitJob
+    displayName: "Waiting Approval"
+    environment: wait   # ⚠️ environment có approval → sẽ WAITING
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - script: echo "This will wait for approval"
+
+# 3. Stage bạn kỳ vọng chạy được (nhưng sẽ bị pending)
+- stage: FinalStage
+  displayName: "Final Stage (Expected to run but will PENDING)"
+  dependsOn: BuildA
+  condition: succeeded()   # ⚠️ gây vấn đề
   jobs:
-    - deployment: 
-      environment: dev
-      displayName: "Scan image with trivy"
-      condition: |
-              and(
-                succeeded(),
-                startsWith(variables['Build.SourceBranch'], 'refs/heads/master')
-              )
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-              - script: |
-                      echo "Scanning"
-                displayName: "Scan Docker Image"
+  - job: final
+    steps:
+    - script: echo "Final running"
