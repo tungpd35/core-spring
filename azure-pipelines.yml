@@ -11,134 +11,56 @@ pool:
   vmImage: ubuntu-latest
 
 stages:
-  # Stage 1: Simulate DeployUat
-  - stage: DeployUat
-    displayName: "Deploy UAT Stage"
+# Stage 1: Chạy bình thường
+  - stage: StageA
+    displayName: "Stage A"
     jobs:
-      - job: DeployUatJob
-        steps:
-          - script: echo "Deploying to UAT..."
+    - job: JobA
+      steps:
+      - script: echo "Stage A done"
 
-  # Stage 2: DeployClusterK8S - dependsOn DeployUat (có approval gate)
-  # BUG: Dù DeployProd xong, stage này vẫn Waiting vì approval gate trên environment
-  - stage: DeployClusterK8S
-    displayName: "Deploy Cluster K8S Stage"
-    dependsOn: DeployUat
-    condition: |
-            and(
-              succeeded(),
-              startsWith(variables['Build.SourceBranch'], 'refs/heads/master')
-            )
+  # Stage 2 và 3 cùng dependsOn StageA - chạy song song
+  # Stage 2: Cần approval (simulate DeployClusterK8S)
+  - stage: StageB_NeedApproval
+    displayName: "Stage B - Need Approval"
+    dependsOn: StageA
+    # Tạo environment "staging" có approval gate trong Azure DevOps UI
     jobs:
-      - deployment: DockerBuild
-        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "DockerBuild..."
-      - deployment: DeployK8S2
-        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "Deploying2 to K8S cluster..."
-      - deployment: DeployK8S3
-        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "Deploying3 to K8S cluster..."
-      - deployment: DeployK8S4
-        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "Deploying4 to K8S cluster..."
-      - deployment: DeployK8S5
-        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "Deploying5 to K8S cluster..."
-      - deployment: DeployK8S6
-        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "Deploying6 to K8S cluster..."
-      - deployment: DeployK8S7
-        environment: prod          # ← Approval gate được gắn ở đây trong Azure DevOps portal
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "Deploying7 to K8S cluster..."
+    - deployment: DeployB
+      environment: prod   # ← environment này có approval gate
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - script: echo "Stage B done"
 
-  # Stage 3: DeployProd - dependsOn DeployUat (chạy song song với DeployClusterK8S)
-  - stage: DeployProd
-    displayName: "Deploy Prod Stage"
-    dependsOn: DeployUat
-    condition: |
-            and(
-              succeeded(),
-              startsWith(variables['Build.SourceBranch'], 'refs/heads/master')
-            )
+  # Stage 3: Không cần approval (simulate DeployProd)
+  - stage: StageC_NeedApproval
+    displayName: "Stage C - No Approval"
+    dependsOn: StageA
     jobs:
-      - deployment: DeployProdJob
-        environment: prod          # ← Cùng environment, cùng approval gate.
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "Deploying to Prod..."
-      - deployment: DeployProdJob2
-        environment: prod          # ← Cùng environment, cùng approval gate.
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "Deploying2 to Prod..."
+    - job: JobC
+      steps:
+      - script: echo "Stage C done"
 
-  # Stage 4: DeployClusterDR - dependsOn DeployProd
-  # BUG: Not started dù DeployProd đã xong vì DeployClusterK8S vẫn đang Waiting
-  - stage: DeployClusterDR
-    displayName: "Deploy DR Stage"
-    dependsOn: DeployProd
-    condition: |
-            and(
-              succeeded(),
-              startsWith(variables['Build.SourceBranch'], 'refs/heads/master')
-            )
-    jobs:
-      - deployment: DeployDR
-        environment: dr
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "Deploying to DR..."
+  # ===== 2 stage dưới bị block dù StageC xong =====
 
-  # Stage 5: SendNotify - dependsOn DeployProd
-  # BUG: Tương tự, Not started
-  - stage: SendNotify
-    displayName: "Create PR Task"
-    dependsOn: DeployProd
-    condition: |
-            and(
-              succeeded(),
-              startsWith(variables['Build.SourceBranch'], 'refs/heads/master')
-            )
+  # Stage 4 (simulate DeployClusterDR)
+  - stage: StageD
+    displayName: "Stage D - Bị Block"
+    dependsOn: StageC_NeedApproval
+    condition: succeeded()   # ← bị block vì succeeded() check tất cả stage
     jobs:
-      - deployment: DeployDR
-        environment: notify
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: echo "Sending notification..."
+    - job: JobD
+      steps:
+      - script: echo "Stage D done"
+
+  # Stage 5 (simulate SendNotify)  
+  - stage: StageE
+    displayName: "Stage E - Bị Block"
+    dependsOn: StageC_NeedApproval
+    condition: succeeded()   # ← bị block vì succeeded() check tất cả stage
+    jobs:
+    - job: JobE
+      steps:
+      - script: echo "Stage E done"
