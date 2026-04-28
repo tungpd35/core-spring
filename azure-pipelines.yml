@@ -19,22 +19,20 @@ stages:
       steps:
       - script: echo "Stage A done"
 
-  # Stage 2 và 3 cùng dependsOn StageA - chạy song song
-  # Stage 2: Cần approval (simulate DeployClusterK8S)
+  # Simulate DeployClusterK8S - có approval, chạy song song với StageC
   - stage: StageB_NeedApproval
     displayName: "Stage B - Need Approval"
     dependsOn: StageA
-    # Tạo environment "staging" có approval gate trong Azure DevOps UI
     jobs:
     - deployment: DeployB
-      environment: prod   # ← environment này có approval gate
+      environment: prod   # environment có approval gate
       strategy:
         runOnce:
           deploy:
             steps:
             - script: echo "Stage B done"
 
-  # Stage 3: Không cần approval (simulate DeployProd)
+  # Simulate DeployProd - không cần approval
   - stage: StageC_NeedApproval
     displayName: "Stage C - No Approval"
     dependsOn: StageA
@@ -43,23 +41,26 @@ stages:
       steps:
       - script: echo "Stage C done"
 
-  # ===== 2 stage dưới bị block dù StageC xong =====
+  # ===== BUG: dependsOn cả B lẫn C =====
+  # succeeded() sẽ check tất cả dependsOn → bị block vì B đang waiting
 
-  # Stage 4 (simulate DeployClusterDR)
   - stage: StageD
     displayName: "Stage D - Bị Block"
-    dependsOn: StageC_NeedApproval
-    condition: succeeded()   # ← bị block vì succeeded() check tất cả stage
+    dependsOn:
+      - StageB_NeedApproval   # ← thêm dòng này
+      - StageC_NeedApproval
+    condition: succeeded()    # check tất cả → block vì StageB waiting
     jobs:
     - job: JobD
       steps:
       - script: echo "Stage D done"
 
-  # Stage 5 (simulate SendNotify)  
   - stage: StageE
     displayName: "Stage E - Bị Block"
-    dependsOn: StageC_NeedApproval
-    condition: succeeded()   # ← bị block vì succeeded() check tất cả stage
+    dependsOn:
+      - StageB_NeedApproval   # ← thêm dòng này
+      - StageC_NeedApproval
+    condition: succeeded()    # check tất cả → block vì StageB waiting
     jobs:
     - job: JobE
       steps:
