@@ -19,37 +19,37 @@ stages:
       steps:
       - script: echo "Stage A done"
 
-  # Simulate DeployClusterK8S - có approval, chạy song song với StageC
+  # Simulate DeployClusterK8S - có approval gate trên environment prod
   - stage: StageB_NeedApproval
     displayName: "Stage B - Need Approval"
     dependsOn: StageA
     jobs:
     - deployment: DeployB
-      environment: prod   # environment có approval gate
+      environment: prod    # ← có approval gate, đang chờ
       strategy:
         runOnce:
           deploy:
             steps:
             - script: echo "Stage B done"
 
-  # Simulate DeployProd - không cần approval
-  - stage: StageC_NeedApproval
+  # Simulate DeployProd - cũng dùng environment prod → bị queue sau StageB
+  - stage: StageC_NoApproval
     displayName: "Stage C - No Approval"
     dependsOn: StageA
     jobs:
-    - job: JobC
-      steps:
-      - script: echo "Stage C done"
+    - deployment: DeployC
+      environment: prod    # ← cùng environment prod với StageB → bị lock
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - script: echo "Stage C done"
 
-  # ===== BUG: dependsOn cả B lẫn C =====
-  # succeeded() sẽ check tất cả dependsOn → bị block vì B đang waiting
-
+  # Chỉ dependsOn StageC nhưng vẫn bị block vì StageC chưa xong
   - stage: StageD
     displayName: "Stage D - Bị Block"
-    dependsOn:
-      - StageB_NeedApproval   # ← thêm dòng này
-      - StageC_NeedApproval
-    condition: succeeded()    # check tất cả → block vì StageB waiting
+    dependsOn: StageC_NoApproval
+    condition: succeeded()
     jobs:
     - job: JobD
       steps:
@@ -57,10 +57,8 @@ stages:
 
   - stage: StageE
     displayName: "Stage E - Bị Block"
-    dependsOn:
-      - StageB_NeedApproval   # ← thêm dòng này
-      - StageC_NeedApproval
-    condition: succeeded()    # check tất cả → block vì StageB waiting
+    dependsOn: StageC_NoApproval
+    condition: succeeded()
     jobs:
     - job: JobE
       steps:
